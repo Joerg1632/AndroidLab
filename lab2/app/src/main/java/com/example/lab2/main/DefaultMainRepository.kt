@@ -1,25 +1,17 @@
 package com.example.lab2.main
 
-import com.example.lab2.data.CurrencyApi
-import com.example.lab2.data.models.CurrencyResponse
-import com.example.lab2.util.Resource
+import CurrencyResult
+import android.Manifest
+import androidx.annotation.RequiresPermission
+import com.example.lab2.data.CurrencyRepository
 import javax.inject.Inject
 
 class DefaultMainRepository @Inject constructor(
-    private val api: CurrencyApi
+    private val currencyRepository: CurrencyRepository
 ) : MainRepository {
 
-    override suspend fun getRates(): Resource<CurrencyResponse> {
-        return try {
-            val response = api.getRates()
-            val result = response.body()
-            if (response.isSuccessful && result != null) {
-                Resource.Success(result)
-            } else {
-                Resource.Error(response.message())
-            }
-        } catch (e: Exception) {
-            Resource.Error(e.message ?: "An error occurred")
-        }
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    override suspend fun getRates(): CurrencyResult {
+        return currencyRepository.getRates()
     }
 }
