@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.core.content.edit
 
 @Singleton
 class CurrencyCache @Inject constructor(
@@ -20,18 +21,12 @@ class CurrencyCache @Inject constructor(
     }
 
     fun saveRates(json: String) {
-        prefs.edit()
-            .putString(KEY_RATES_JSON, json)
-            .putLong(KEY_TIMESTAMP, System.currentTimeMillis())
-            .apply()
+        prefs.edit {
+            putString(KEY_RATES_JSON, json)
+                .putLong(KEY_TIMESTAMP, System.currentTimeMillis())
+        }
     }
 
     fun getRates(): String? =
         prefs.getString(KEY_RATES_JSON, null)
-
-    fun getTimestamp(): Long =
-        prefs.getLong(KEY_TIMESTAMP, 0L)
-
-    fun hasCache(): Boolean =
-        prefs.contains(KEY_RATES_JSON)
 }

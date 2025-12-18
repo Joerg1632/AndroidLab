@@ -1,6 +1,7 @@
 package com.example.lab2.favorites
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.lab2.databinding.ActivityFavoritesBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import timber.log.Timber
 
 @AndroidEntryPoint
 class FavoritesActivity : AppCompatActivity() {
@@ -23,6 +25,8 @@ class FavoritesActivity : AppCompatActivity() {
 
         adapter = FavoritesAdapter(emptyList()) { code ->
             viewModel.removeFavorite(code)
+            Timber.i("User removed favorite: $code")
+            Toast.makeText(this, "$code removed from favorites", Toast.LENGTH_SHORT).show()
         }
 
         binding.rvFavorites.layoutManager = LinearLayoutManager(this)
@@ -30,6 +34,7 @@ class FavoritesActivity : AppCompatActivity() {
 
         lifecycleScope.launchWhenStarted {
             viewModel.favorites.collectLatest { favorites ->
+                Timber.d("FavoritesActivity: Updating adapter with ${favorites.size} items")
                 adapter.updateData(favorites.toList())
             }
         }

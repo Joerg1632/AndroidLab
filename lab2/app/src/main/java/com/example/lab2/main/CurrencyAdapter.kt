@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lab2.R
+import timber.log.Timber
 
 class CurrencyAdapter(
     private var items: List<String>,
@@ -30,18 +31,18 @@ class CurrencyAdapter(
         val code = items[position]
         holder.tvCurrencyCode.text = code
 
-        // Показываем звездочку: заполненная если в избранном
-        if (favorites.contains(code)) {
-            holder.ivFavorite.setImageResource(R.drawable.ic_star_filled)
-        } else {
-            holder.ivFavorite.setImageResource(R.drawable.ic_star_outline)
-        }
+        holder.ivFavorite.setImageResource(
+            if (favorites.contains(code)) R.drawable.ic_star_filled
+            else R.drawable.ic_star_outline
+        )
 
         holder.ivFavorite.setOnClickListener {
+            Timber.i("Favorite clicked: $code")
             onFavoriteClick(code)
         }
 
         holder.itemView.setOnClickListener {
+            Timber.i("Item clicked: $code")
             onItemClick(code)
         }
     }
@@ -52,6 +53,7 @@ class CurrencyAdapter(
         items = newItems.sortedByDescending { newFavorites.contains(it) } // избранные сверху
         favorites.clear()
         favorites.addAll(newFavorites)
+        Timber.d("Adapter data updated: ${items.size} items, favorites: $favorites")
         notifyDataSetChanged()
     }
 }

@@ -1,5 +1,6 @@
 package com.example.lab2.favorites
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lab2.R
+import timber.log.Timber
 
 class FavoritesAdapter(
     private var items: List<String>,
@@ -27,11 +29,15 @@ class FavoritesAdapter(
     override fun onBindViewHolder(holder: FavoritesViewHolder, position: Int) {
         val code = items[position]
         holder.tvCurrencyCode.text = code
-        holder.btnRemove.setOnClickListener { onRemoveClick(code) }
+        holder.btnRemove.setOnClickListener {
+            Timber.d("Clicked remove button for $code")
+            onRemoveClick(code)
+        }
     }
 
     override fun getItemCount(): Int = items.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newItems: List<String>) {
         items = newItems
         notifyDataSetChanged()

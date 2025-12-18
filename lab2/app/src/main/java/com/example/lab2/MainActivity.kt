@@ -1,6 +1,5 @@
 package com.example.lab2
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +16,7 @@ import com.example.lab2.main.CurrencyAdapter
 import com.example.lab2.main.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvFromCurrency.setOnClickListener {
             showCurrencyPopup(it) { code ->
+                Timber.i("From currency selected: $code")
                 fromCurrency = code
                 binding.tvFromCurrency.text = code
             }
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvToCurrency.setOnClickListener {
             showCurrencyPopup(it) { code ->
+                Timber.i("To currency selected: $code")
                 toCurrency = code
                 binding.tvToCurrency.text = code
             }
@@ -53,10 +55,12 @@ class MainActivity : AppCompatActivity() {
         binding.btnConvert.setOnClickListener {
             val amountStr = binding.etFrom.text.toString()
             if (amountStr.isBlank()) {
-                binding.tvResult.setTextColor(Color.RED)
+                binding.tvResult.setTextColor(getColor(R.color.errorColor))
                 binding.tvResult.text = "Enter amount"
+                Timber.w("Convert clicked with empty amount")
                 return@setOnClickListener
             }
+            Timber.i("Converting $amountStr $fromCurrency to $toCurrency")
             viewModel.convert(amountStr, fromCurrency, toCurrency)
         }
 
@@ -69,10 +73,12 @@ class MainActivity : AppCompatActivity() {
 
             val amountStr = binding.etFrom.text.toString()
             if (amountStr.isNotBlank()) {
+                Timber.i("Swap currencies and convert $amountStr $fromCurrency to $toCurrency")
                 viewModel.convert(amountStr, fromCurrency, toCurrency)
             } else {
-                binding.tvResult.setTextColor(Color.RED)
+                binding.tvResult.setTextColor(getColor(R.color.errorColor))
                 binding.tvResult.text = "Enter amount"
+                Timber.w("Swap clicked but amount is empty")
             }
         }
 
@@ -82,12 +88,14 @@ class MainActivity : AppCompatActivity() {
 
                 when (event) {
                     is MainViewModel.CurrencyEvent.Success -> {
+                        Timber.i("Conversion success: ${event.resultText}, offline=${event.isOffline}")
                         binding.tvResult.text = event.resultText
                         binding.tvOffline.isVisible = event.isOffline
                     }
 
                     is MainViewModel.CurrencyEvent.Failure -> {
-                        binding.tvResult.setTextColor(Color.RED)
+                        Timber.e("Conversion failed: ${event.errorText}")
+                        binding.tvResult.setTextColor(getColor(R.color.errorColor))
                         binding.tvResult.text = event.errorText
                         binding.tvOffline.isVisible = false
                     }
@@ -102,7 +110,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun showCurrencyPopup(anchor: View, onSelect: (String) -> Unit) {
         val popupView = LayoutInflater.from(this).inflate(R.layout.popup_currency_list, null)
-        val popupWindow = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        val popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
 
         val rv = popupView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvCurrencyPopup)
         rv.layoutManager = LinearLayoutManager(this)
@@ -117,21 +130,24 @@ class MainActivity : AppCompatActivity() {
             items = sortedCurrencies,
             favorites = favs,
             onFavoriteClick = { code ->
+                Timber.i("Favorite clicked: $code")
                 if (favoritesViewModel.favorites.value.contains(code)) {
                     favoritesViewModel.removeFavorite(code)
+                    Timber.d("Removed $code from favorites")
                 } else {
                     favoritesViewModel.addFavorite(code)
+                    Timber.d("Added $code to favorites")
                 }
                 adapter.updateData(currencies, favoritesViewModel.favorites.value)
             },
             onItemClick = { code ->
+                Timber.i("Currency selected from popup: $code")
                 onSelect(code)
                 popupWindow.dismiss()
             }
         )
 
         rv.adapter = adapter
-
         popupWindow.showAsDropDown(anchor)
     }
 }

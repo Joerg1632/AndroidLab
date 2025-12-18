@@ -10,6 +10,7 @@ import com.example.lab2.data.cache.CurrencyCache
 import com.example.lab2.data.models.CurrencyResponse
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,13 +25,16 @@ class CurrencyRepository @Inject constructor(
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     suspend fun getRates(): CurrencyResult {
         return if (isNetworkAvailable()) {
+            Timber.d("Network available. Fetching rates from API")
             try {
                 val response = api.getRates()
+                Timber.i("Rates fetched successfully from API")
 
                 if (response.isSuccessful && response.body() != null) {
                     val data = response.body()!!
 
                     cache.saveRates(gson.toJson(data))
+                    Timber.d("Rates saved to cache")
 
                     CurrencyResult.Success(
                         data = data,
@@ -41,9 +45,11 @@ class CurrencyRepository @Inject constructor(
                 }
 
             } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch rates from API. Trying cache")
                 loadFromCacheOrError()
             }
         } else {
+            Timber.w("No network available. Loading rates from cache")
             loadFromCacheOrError()
         }
     }
@@ -52,6 +58,7 @@ class CurrencyRepository @Inject constructor(
         val cachedJson = cache.getRates()
 
         return if (cachedJson != null) {
+            Timber.i("Loaded rates from cache")
             val cachedData =
                 gson.fromJson(cachedJson, CurrencyResponse::class.java)
 
@@ -60,22 +67,33 @@ class CurrencyRepository @Inject constructor(
                 isOffline = true
             )
         } else {
-            CurrencyResult.Error(
-                message = "Нет интернета и нет сохранённых данных"
-            )
+            Timber.e("No cached data available")
+            CurrencyResult.Error(message = "No internet and no cache data")
         }
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun isNetworkAvailable(): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE)
-                as ConnectivityManager
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = cm.activeNetwork
+            if (network == null) {
+                Timber.w("No active network found")
+                return false
+            }
 
-        val network = cm.activeNetwork ?: return false
-        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+            val capabilities = cm.getNetworkCapabilities(network)
+            if (capabilities == null) {
+                Timber.w("No network capabilities found")
+                return false
+            }
 
-        return capabilities.hasCapability(
-            NetworkCapabilities.NET_CAPABILITY_INTERNET
-        )
+            val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            Timber.d("Network available: $hasInternet")
+            hasInternet
+        } catch (e: Exception) {
+            Timber.e(e, "Error checking network availability")
+            false
+        }
     }
 }
