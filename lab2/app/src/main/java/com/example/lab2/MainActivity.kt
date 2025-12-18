@@ -14,6 +14,7 @@ import com.example.lab2.databinding.ActivityMainBinding
 import com.example.lab2.favorites.FavoritesViewModel
 import com.example.lab2.main.CurrencyAdapter
 import com.example.lab2.main.MainViewModel
+import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
@@ -88,9 +89,14 @@ class MainActivity : AppCompatActivity() {
 
                 when (event) {
                     is MainViewModel.CurrencyEvent.Success -> {
-                        Timber.i("Conversion success: ${event.resultText}, offline=${event.isOffline}")
                         binding.tvResult.text = event.resultText
                         binding.tvOffline.isVisible = event.isOffline
+
+                        val color = MaterialColors.getColor(
+                            binding.tvResult,
+                            com.google.android.material.R.attr.colorOnSurface
+                        )
+                        binding.tvResult.setTextColor(color)
                     }
 
                     is MainViewModel.CurrencyEvent.Failure -> {
