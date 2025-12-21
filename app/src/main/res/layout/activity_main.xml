@@ -17,9 +17,4 @@
         android:layout_height="wrap_content"
         android:text="Перейти к экрану B" />
 
-    <Button
-        android:id="@+id/buttonExitA"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Закрыть приложение" />
 </LinearLayout>
