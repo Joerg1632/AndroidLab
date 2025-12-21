@@ -7,21 +7,16 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Log.d("Lifecycle", "MainActivity onCreate")
+        Log.d("Lifecycle", "A onCreate")
 
         findViewById<Button>(R.id.buttonNextA).setOnClickListener {
-            Log.d("Navigation", "Переход с A на B")
-            val intent= Intent(this@MainActivity, BActivity::class.java)
-            startActivity(intent)
-        }
-
-        findViewById<Button>(R.id.buttonExitA).setOnClickListener {
-            Log.d("Lifecycle", "Finish app")
-            finishAffinity()
+            Log.d("Navigation", "A -> B")
+            startActivity(Intent(this, BActivity::class.java))
         }
     }
 }
